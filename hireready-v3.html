@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HireReady | ATS Resume Builder</title>
+
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  HireReady v3 — Upgrade Changelog                        ║
+  ║  ─────────────────────────────────────────────────────── ║
+  ║  1. THREE RESUME TEMPLATES (Modern / Classic / Minimal)  ║
+  ║  2. LIVE PREVIEW — updates as you type                   ║
+  ║  3. PDF DOWNLOAD via html2pdf.js                         ║
+  ║  4. LOCALSTORAGE — auto-saves & restores form data       ║
+  ║  5. MOBILE RESPONSIVE — stacked layout on small screens  ║
+  ║  6. CODE QUALITY — modular JS, clear comments            ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+
+<!-- [NEW] html2pdf.js — handles PDF generation with correct styling -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & DESIGN TOKENS
+═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:        #0d0d0d;
+  --ink-2:      #3a3a3a;
+  --ink-3:      #6b6b6b;
+  --rule:       #e0e0e0;
+  --rule-soft:  #ebebeb;
+  --bg:         #f7f7f5;
+  --white:      #ffffff;
+  --accent:     #1a56db;
+  --accent-dk:  #1440ad;
+  --accent-lt:  #eef2fd;
+  --success:    #1a7a4a;
+  --tag-bg:     #f0f0ee;
+  --radius:     6px;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:  0 4px 16px rgba(0,0,0,.10);
+  --font-ui:    'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════════════════ */
+#site-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(247,247,245,.93);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+  padding: 0 28px;
+  height: 54px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+  font-size: 17px; font-weight: 800; letter-spacing: -0.03em;
+  color: var(--ink); text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-logo-mark {
+  width: 28px; height: 28px;
+  background: var(--accent); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.nav-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--accent);
+  background: var(--accent-lt); border: 1px solid #c7d7f8;
+  border-radius: 4px; padding: 2px 7px;
+}
+.nav-right { display: flex; align-items: center; gap: 10px; }
+
+/* [NEW] Template switcher in the nav */
+.template-picker {
+  display: flex; gap: 4px;
+  background: var(--bg); border: 1px solid var(--rule);
+  border-radius: var(--radius); padding: 3px;
+}
+.tpl-btn {
+  font-family: var(--font-ui);
+  font-size: 11px; font-weight: 600;
+  padding: 5px 12px; border: none;
+  border-radius: 4px; cursor: pointer;
+  background: transparent; color: var(--ink-3);
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+.tpl-btn.active {
+  background: var(--white); color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.tpl-btn:hover:not(.active) { color: var(--ink); }
+
+.btn-nav-pdf {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+  color: var(--white); background: var(--accent);
+  border: none; border-radius: var(--radius);
+  padding: 7px 16px; cursor: pointer;
+  transition: background .15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-nav-pdf:hover { background: var(--accent-dk); }
+
+/* ═══════════════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════════════ */
+#hero {
+  padding: 64px 32px 52px;
+  text-align: center; max-width: 740px; margin: 0 auto;
+  animation: fadeUp .5s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--accent);
+  background: var(--accent-lt); border: 1px solid #c7d7f8;
+  border-radius: 20px; padding: 4px 14px; margin-bottom: 18px;
+}
+.hero-eyebrow span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block;
+}
+#hero h1 {
+  font-size: clamp(26px, 5vw, 44px); font-weight: 900;
+  letter-spacing: -.03em; line-height: 1.1; margin-bottom: 14px;
+}
+#hero h1 em { font-style: normal; color: var(--accent); }
+#hero p.sub {
+  font-size: 16px; color: var(--ink-2);
+  max-width: 520px; margin: 0 auto 28px; line-height: 1.6;
+}
+.hero-meta {
+  margin-top: 16px; font-size: 12px; color: var(--ink-3);
+  display: flex; align-items: center; justify-content: center;
+  gap: 18px; flex-wrap: wrap;
+}
+.hero-meta-item { display: flex; align-items: center; gap: 5px; }
+.btn-hero {
+  font-size: 15px; font-weight: 700; color: var(--white);
+  background: var(--accent); border: none; border-radius: var(--radius);
+  padding: 12px 30px; cursor: pointer;
+  transition: background .15s, transform .12s; text-decoration: none;
+}
+.btn-hero:hover { background: var(--accent-dk); transform: translateY(-1px); }
+
+/* ═══════════════════════════════════════════════════════════
+   HOW IT WORKS
+═══════════════════════════════════════════════════════════ */
+#how-it-works {
+  background: var(--white);
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  padding: 52px 32px;
+}
+.section-label {
+  text-align: center; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  color: var(--ink-3); margin-bottom: 8px;
+}
+.section-title {
+  text-align: center; font-size: clamp(18px, 3vw, 26px);
+  font-weight: 800; letter-spacing: -.02em; margin-bottom: 44px;
+}
+.steps-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 0; max-width: 820px; margin: 0 auto; position: relative;
+}
+.steps-grid::before {
+  content: ''; position: absolute; top: 28px;
+  left: calc(16.66% + 20px); right: calc(16.66% + 20px);
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--rule) 0, var(--rule) 6px, transparent 6px, transparent 12px);
+}
+.step { text-align: center; padding: 0 24px; position: relative; }
+.step-num {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 2px solid var(--rule); background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px; font-size: 20px; position: relative; z-index: 1;
+  transition: border-color .2s, background .2s;
+}
+.step:hover .step-num { border-color: var(--accent); background: var(--accent-lt); }
+.step-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.step-desc { font-size: 12px; color: var(--ink-3); line-height: 1.6; }
+
+/* ═══════════════════════════════════════════════════════════
+   BUILDER SECTION + APP SHELL
+═══════════════════════════════════════════════════════════ */
+#builder-section {
+  padding: 40px 28px 80px;
+  max-width: 1280px; margin: 0 auto;
+}
+.builder-header { margin-bottom: 22px; }
+.builder-header h2 {
+  font-size: 20px; font-weight: 800; letter-spacing: -.02em;
+}
+.builder-header p { font-size: 13px; color: var(--ink-3); margin-top: 3px; }
+
+/* [UPDATED] Split layout — always side-by-side on desktop */
+#app {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORM PANEL
+═══════════════════════════════════════════════════════════ */
+#form-panel {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  position: sticky; top: 66px;
+  max-height: calc(100vh - 90px);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.form-panel-inner {
+  overflow-y: auto; padding: 22px 22px 6px; flex: 1;
+  scrollbar-width: thin; scrollbar-color: var(--rule) transparent;
+}
+.form-panel-inner::-webkit-scrollbar { width: 4px; }
+.form-panel-inner::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+.form-panel-footer {
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--rule-soft);
+  background: var(--white);
+}
+.form-section { margin-bottom: 22px; }
+.form-section-title {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--ink-3);
+  padding-bottom: 7px; border-bottom: 1px solid var(--rule-soft);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 7px;
+}
+.step-icon {
+  width: 16px; height: 16px; background: var(--accent-lt);
+  border-radius: 3px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.optional-tag {
+  margin-left: auto; font-size: 9px; font-weight: 600; color: var(--ink-3);
+  background: var(--tag-bg); border-radius: 3px; padding: 1px 6px;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+label {
+  display: block; font-size: 11px; font-weight: 600; color: var(--ink-2);
+  margin-bottom: 3px; margin-top: 9px; letter-spacing: .02em;
+}
+label:first-child { margin-top: 0; }
+input[type="text"], input[type="email"], input[type="tel"],
+input[type="url"], textarea {
+  width: 100%; border: 1px solid var(--rule); padding: 7px 9px;
+  font-family: var(--font-ui); font-size: 13px; color: var(--ink);
+  background: var(--white); outline: none; border-radius: var(--radius);
+  transition: border-color .15s, box-shadow .15s; resize: vertical;
+}
+input:hover, textarea:hover { border-color: #bbb; }
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(26,86,219,.09);
+}
+input::placeholder, textarea::placeholder { color: #bbb; }
+textarea { min-height: 66px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+/* Project blocks */
+.project-block {
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: 11px 13px; margin-bottom: 9px;
+  background: var(--bg); position: relative;
+}
+.proj-block-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px;
+}
+.proj-block-label { font-size: 10px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .07em; }
+.remove-btn {
+  background: none; border: 1px solid var(--rule); cursor: pointer;
+  font-size: 10px; font-weight: 600; padding: 2px 7px; color: var(--ink-3);
+  font-family: var(--font-ui); border-radius: 4px; transition: all .15s;
+}
+.remove-btn:hover { border-color: #e55; color: #c33; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--font-ui); font-size: 13px; font-weight: 600; padding: 8px 16px; cursor: pointer; border-radius: var(--radius); transition: all .15s; border: none; }
+.btn-add {
+  width: 100%; background: transparent; color: var(--accent);
+  border: 1.5px dashed #b8c8f0; font-size: 12px; padding: 7px; margin-top: 3px;
+}
+.btn-add:hover { background: var(--accent-lt); border-style: solid; }
+
+
+/* Trust line */
+.trust-line {
+  text-align: center; font-size: 11px; color: var(--ink-3);
+  margin-top: 9px; display: flex; align-items: center;
+  justify-content: center; gap: 12px; flex-wrap: wrap;
+}
+.trust-item { display: flex; align-items: center; gap: 4px; }
+
+/* ═══════════════════════════════════════════════════════════
+   [NEW] PREVIEW PANEL — always visible, live-updating
+═══════════════════════════════════════════════════════════ */
+#preview-panel {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.preview-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--white); border: 1px solid var(--rule);
+  border-radius: var(--radius); padding: 10px 16px;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap; gap: 10px;
+}
+.preview-toolbar-left { font-size: 12px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+.preview-toolbar-left strong { color: var(--ink); font-weight: 700; }
+
+/* Live indicator dot */
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #34c77b; display: inline-block;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .4; }
+}
+
+
+
+/* Download button — sits directly below the resume preview */
+.btn-below-pdf {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  background: var(--accent); color: var(--white);
+  font-family: var(--font-ui); font-size: 14px; font-weight: 700;
+  padding: 13px; border: none; border-radius: var(--radius);
+  cursor: pointer; transition: background .15s, transform .12s;
+  letter-spacing: 0.01em;
+}
+.btn-below-pdf:hover { background: var(--accent-dk); transform: translateY(-1px); }
+.btn-below-pdf:active { transform: translateY(0); }
+#resume-wrapper {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   [NEW] RESUME OUTPUT — base styles shared across templates
+═══════════════════════════════════════════════════════════ */
+#resume-output {
+  padding: 44px 48px;
+  min-height: 400px;
+  font-size: 10.5pt;
+  color: #111;
+  line-height: 1.45;
+  transition: opacity .15s;
+}
+
+/* Common resume elements */
+#resume-output .r-name  { line-height: 1.0; margin-bottom: 4px; }
+#resume-output .r-contact { margin-bottom: 16px; }
+#resume-output .r-contact a { text-decoration: underline; }
+#resume-output .r-section { margin-bottom: 13px; }
+#resume-output .r-section-title { padding-bottom: 3px; margin-bottom: 7px; }
+#resume-output .r-skills-list { list-style: disc; padding-left: 18px; columns: 2; column-gap: 24px; }
+#resume-output .r-skills-list li { break-inside: avoid; margin-bottom: 2px; }
+#resume-output .whitespace-pre { white-space: pre-line; }
+#resume-output .r-proj { margin-bottom: 9px; }
+#resume-output .r-proj-title { font-weight: 700; }
+#resume-output .r-proj-meta { font-size: 9pt; margin-bottom: 2px; }
+
+/* ── TEMPLATE: MODERN (default) ──────────────────────────── */
+#resume-output.tpl-modern {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+#resume-output.tpl-modern .r-name {
+  font-size: 22pt; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: #0d0d0d;
+}
+#resume-output.tpl-modern .r-contact {
+  font-size: 9pt; color: #444;
+}
+#resume-output.tpl-modern .r-contact a { color: #1a56db; }
+#resume-output.tpl-modern .r-section-title {
+  font-size: 8pt; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .14em;
+  border-bottom: 2px solid #1a56db; color: #1a56db;
+}
+#resume-output.tpl-modern .r-proj-meta a { color: #1a56db; }
+
+/* ── TEMPLATE: CLASSIC ───────────────────────────────────── */
+#resume-output.tpl-classic {
+  font-family: 'Times New Roman', Times, Georgia, serif;
+}
+#resume-output.tpl-classic .r-name {
+  font-size: 24pt; font-weight: 700;
+  text-align: center; letter-spacing: .06em;
+  text-transform: uppercase; color: #111;
+}
+#resume-output.tpl-classic .r-contact {
+  font-size: 9pt; color: #333;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 1.5px double #111;
+}
+#resume-output.tpl-classic .r-contact a { color: #111; }
+#resume-output.tpl-classic .r-section-title {
+  font-size: 11pt; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  border-bottom: 1px solid #111; color: #111;
+}
+#resume-output.tpl-classic .r-proj-meta a { color: #111; }
+
+/* ── TEMPLATE: MINIMAL ───────────────────────────────────── */
+#resume-output.tpl-minimal {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+#resume-output.tpl-minimal .r-name {
+  font-size: 20pt; font-weight: 300;
+  letter-spacing: .12em; text-transform: uppercase; color: #111;
+}
+#resume-output.tpl-minimal .r-contact {
+  font-size: 9pt; color: #666;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ddd;
+}
+#resume-output.tpl-minimal .r-contact a { color: #444; }
+#resume-output.tpl-minimal .r-section-title {
+  font-size: 8pt; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: #888; border-bottom: none;
+  padding-bottom: 0; margin-bottom: 8px;
+}
+#resume-output.tpl-minimal .r-skills-list { list-style: none; padding-left: 0; }
+#resume-output.tpl-minimal .r-skills-list li::before { content: '— '; color: #aaa; }
+#resume-output.tpl-minimal .r-proj-meta a { color: #555; }
+
+/* ── Empty placeholder ───────────────────────────────────── */
+.resume-placeholder {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 80px 40px; text-align: center;
+}
+.empty-icon {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: var(--accent-lt);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.resume-placeholder h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.resume-placeholder p { font-size: 13px; color: var(--ink-3); max-width: 240px; }
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════════ */
+#site-footer {
+  background: var(--white); border-top: 1px solid var(--rule);
+  padding: 24px 32px; display: flex; align-items: center;
+  justify-content: space-between; font-size: 12px; color: var(--ink-3);
+  flex-wrap: wrap; gap: 12px;
+}
+.footer-logo { font-weight: 800; font-size: 14px; letter-spacing: -.02em; color: var(--ink); }
+.footer-links { display: flex; gap: 18px; }
+.footer-links a { color: var(--ink-3); text-decoration: none; }
+.footer-links a:hover { color: var(--ink); }
+
+/* ═══════════════════════════════════════════════════════════
+   PRINT STYLES
+═══════════════════════════════════════════════════════════ */
+@media print {
+  @page { size: A4; margin: 16mm 18mm; }
+  body { background: #fff; }
+  #site-nav, #hero, #how-it-works, #builder-section .builder-header,
+  #form-panel, .preview-toolbar, #site-footer { display: none !important; }
+  #builder-section { padding: 0; max-width: none; }
+  #app { display: block; }
+  #preview-panel { display: block; }
+  #resume-wrapper { border: none; box-shadow: none; border-radius: 0; }
+  #resume-output { padding: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   [NEW] MOBILE RESPONSIVE — stacks vertically on small screens
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 920px) {
+  /* Stack the form above the preview */
+  #app { grid-template-columns: 1fr; }
+
+  #form-panel { position: static; max-height: none; }
+
+  /* Make the template picker wrap nicely */
+  .template-picker { flex-wrap: wrap; }
+
+  /* Shrink nav on tablet */
+  #site-nav { padding: 0 16px; }
+  .nav-badge { display: none; }
+}
+
+@media (max-width: 600px) {
+  #hero { padding: 40px 16px 36px; }
+  #how-it-works { padding: 36px 16px; }
+  #builder-section { padding: 28px 14px 60px; }
+
+  /* Stack How-It-Works steps vertically */
+  .steps-grid { grid-template-columns: 1fr; gap: 22px; }
+  .steps-grid::before { display: none; }
+
+  /* Stack email/phone fields */
+  .field-row { grid-template-columns: 1fr; }
+
+  /* Narrower resume padding on mobile */
+  #resume-output { padding: 28px 22px; }
+  #resume-output .r-skills-list { columns: 1; }
+
+  /* Template picker becomes a row that wraps */
+  .template-picker { width: 100%; justify-content: stretch; }
+  .tpl-btn { flex: 1; text-align: center; }
+
+  /* Preview toolbar on mobile */
+  .preview-toolbar { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NAV
+     [UPDATED] Added template picker + PDF download button
+═══════════════════════════════════════════════════════════ -->
+<nav id="site-nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">
+      <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
+        <rect x="1" y="1" width="8" height="10" rx="1" stroke="white" stroke-width="1.5"/>
+        <line x1="3" y1="4" x2="7" y2="4" stroke="white" stroke-width="1.3"/>
+        <line x1="3" y1="6.5" x2="7" y2="6.5" stroke="white" stroke-width="1.3"/>
+        <line x1="3" y1="9" x2="5.5" y2="9" stroke="white" stroke-width="1.3"/>
+        <circle cx="10.5" cy="11.5" r="3" fill="#34c77b"/>
+        <path d="M9 11.5l1 1 1.5-1.5" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    HireReady
+    <span class="nav-badge">Free</span>
+  </a>
+
+  <div class="nav-right">
+    <!-- [NEW] Template selector -->
+    <div class="template-picker" role="group" aria-label="Resume template">
+      <button class="tpl-btn active" data-template="modern"  onclick="setTemplate('modern')">Modern</button>
+      <button class="tpl-btn"        data-template="classic" onclick="setTemplate('classic')">Classic</button>
+      <button class="tpl-btn"        data-template="minimal" onclick="setTemplate('minimal')">Minimal</button>
+    </div>
+
+    <!-- [NEW] PDF download button in nav -->
+    <button class="btn btn-nav-pdf" onclick="downloadPDF()">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M6 1v7M3.5 5.5L6 8l2.5-2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M1 9.5C1 10.3 1.7 11 2.5 11h7c.8 0 1.5-.7 1.5-1.5" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      Download PDF
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="hero-eyebrow"><span></span> ATS-Optimized Resume Builder</div>
+  <h1>Build a Professional,<br><em>ATS-Friendly</em> Resume<br>in Minutes</h1>
+  <p class="sub">No account needed. No fluff. Just a clean, recruiter-ready resume that gets past filters and into human hands.</p>
+  <a href="#builder-section" class="btn-hero">Start Building — It's Free</a>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#34c77b" stroke-width="1.4"/><path d="M4 6.5l1.7 1.7L9.5 4.5" stroke="#34c77b" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      No sign-up required
+    </div>
+    <div class="hero-meta-item">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#34c77b" stroke-width="1.4"/><path d="M4 6.5l1.7 1.7L9.5 4.5" stroke="#34c77b" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      3 professional templates
+    </div>
+    <div class="hero-meta-item">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#34c77b" stroke-width="1.4"/><path d="M4 6.5l1.7 1.7L9.5 4.5" stroke="#34c77b" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      100% private — no data stored
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOW IT WORKS
+═══════════════════════════════════════════════════════════ -->
+<section id="how-it-works">
+  <div class="section-label">Simple process</div>
+  <div class="section-title">Three steps to your next interview</div>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">📝</div>
+      <div class="step-title">Fill the Form</div>
+      <p class="step-desc">Enter your details — the live preview updates instantly as you type. Your data is auto-saved to your browser.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">🎨</div>
+      <div class="step-title">Choose a Template</div>
+      <p class="step-desc">Switch between Modern, Classic, and Minimal styles. See the change reflected in real time with one click.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">📄</div>
+      <div class="step-title">Download as PDF</div>
+      <p class="step-desc">Export a perfectly formatted A4 PDF with accurate styling — no watermarks, no upsells, no sign-up required.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     BUILDER
+═══════════════════════════════════════════════════════════ -->
+<section id="builder-section">
+  <div class="builder-header">
+    <h2>Build Your Resume</h2>
+    <p>Your details auto-save in the browser. The preview updates live as you type.</p>
+  </div>
+
+  <div id="app">
+
+    <!-- ══════════════ FORM PANEL -->
+    <div id="form-panel">
+      <div class="form-panel-inner">
+
+        <!-- Personal Info -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <div class="step-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="3.5" r="2" stroke="#1a56db" stroke-width="1.3"/><path d="M1 9c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="#1a56db" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            Personal Info
+          </div>
+
+          <label for="f-name">Full Name *</label>
+          <input type="text" id="f-name" placeholder="Jane Smith" oninput="liveUpdate()">
+
+          <div class="field-row">
+            <div>
+              <label for="f-email">Email *</label>
+              <input type="email" id="f-email" placeholder="jane@email.com" oninput="liveUpdate()">
+            </div>
+            <div>
+              <label for="f-phone">Phone *</label>
+              <input type="tel" id="f-phone" placeholder="+1 (555) 000-0000" oninput="liveUpdate()">
+            </div>
+          </div>
+
+          <label for="f-linkedin">LinkedIn <small style="font-weight:400;color:var(--ink-3)">(optional)</small></label>
+          <input type="url" id="f-linkedin" placeholder="linkedin.com/in/janesmith" oninput="liveUpdate()">
+
+          <label for="f-portfolio">Portfolio / GitHub <small style="font-weight:400;color:var(--ink-3)">(optional)</small></label>
+          <input type="url" id="f-portfolio" placeholder="github.com/janesmith" oninput="liveUpdate()">
+        </div>
+
+        <!-- Professional Summary -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <div class="step-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="1" width="8" height="8" rx="1" stroke="#1a56db" stroke-width="1.3"/><line x1="3" y1="3.5" x2="7" y2="3.5" stroke="#1a56db" stroke-width="1.2"/><line x1="3" y1="5.5" x2="6" y2="5.5" stroke="#1a56db" stroke-width="1.2"/></svg>
+            </div>
+            Professional Summary
+            <span class="optional-tag">Optional</span>
+          </div>
+          <textarea id="f-summary" rows="3" placeholder="Results-driven engineer with 3+ years building scalable web applications..." oninput="liveUpdate()"></textarea>
+        </div>
+
+        <!-- Skills -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <div class="step-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#1a56db" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            Skills
+          </div>
+          <label for="f-skills">One skill per line — shown as bullet points</label>
+          <textarea id="f-skills" rows="5" placeholder="JavaScript&#10;React&#10;Node.js&#10;PostgreSQL&#10;Docker" oninput="liveUpdate()"></textarea>
+        </div>
+
+        <!-- Education -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <div class="step-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1.5L9 4 5 6.5 1 4z" stroke="#1a56db" stroke-width="1.3" stroke-linejoin="round"/><path d="M3 5v2.5c.5.5 1.2.8 2 .8s1.5-.3 2-.8V5" stroke="#1a56db" stroke-width="1.3" stroke-linecap="round"/></svg>
+            </div>
+            Education
+          </div>
+          <textarea id="f-education" rows="4" placeholder="B.S. Computer Science — MIT&#10;Graduated May 2022 | GPA: 3.9&#10;Dean's List" oninput="liveUpdate()"></textarea>
+        </div>
+
+        <!-- Experience -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <div class="step-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><rect x="1" y="3" width="8" height="6" rx="1" stroke="#1a56db" stroke-width="1.3"/><path d="M3.5 3V2.5a1.5 1.5 0 013 0V3" stroke="#1a56db" stroke-width="1.3"/></svg>
+            </div>
+            Experience
+            <span class="optional-tag">Optional</span>
+          </div>
+          <textarea id="f-experience" rows="6" placeholder="Software Engineer — Acme Corp (Jan 2022 – Present)&#10;• Built REST APIs serving 2M+ monthly users&#10;• Reduced load time by 40%" oninput="liveUpdate()"></textarea>
+        </div>
+
+        <!-- Projects -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <div class="step-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polygon points="5,1 9,4 9,9 1,9 1,4" stroke="#1a56db" stroke-width="1.3" stroke-linejoin="round"/></svg>
+            </div>
+            Projects
+          </div>
+          <div id="projects-container"></div>
+          <button class="btn btn-add" onclick="addProject()">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="5.5" y1="1" x2="5.5" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Add Project
+          </button>
+        </div>
+
+        <!-- Certifications -->
+        <div class="form-section">
+          <div class="form-section-title">
+            <div class="step-icon">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3.5" stroke="#1a56db" stroke-width="1.3"/><path d="M3.5 5l1.2 1.2 2-2" stroke="#1a56db" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            Certifications
+            <span class="optional-tag">Optional</span>
+          </div>
+          <textarea id="f-certs" rows="3" placeholder="AWS Certified Solutions Architect (2023)&#10;Google Professional Cloud Developer (2022)" oninput="liveUpdate()"></textarea>
+        </div>
+
+      </div><!-- .form-panel-inner -->
+
+      <div class="form-panel-footer">
+        <div class="trust-line">
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L1 3v3C1 8 2.7 9.5 5 10 7.3 9.5 9 8 9 6V3L5 1z" stroke="#34c77b" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            Private &amp; secure
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="#34c77b" stroke-width="1.2"/><path d="M3 5l1.4 1.4 2.6-2.6" stroke="#34c77b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Auto-saved locally
+          </div>
+          <div class="trust-item">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="#34c77b" stroke-width="1.2"/><path d="M3 5l1.4 1.4 2.6-2.6" stroke="#34c77b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            ATS compatible
+          </div>
+        </div>
+      </div>
+    </div><!-- #form-panel -->
+
+    <!-- ══════════════ PREVIEW PANEL -->
+    <div id="preview-panel">
+      <!-- Preview toolbar -->
+      <div class="preview-toolbar">
+        <div class="preview-toolbar-left">
+          <span class="live-dot"></span>
+          <strong>Live Preview</strong>
+          <span>— updates as you type</span>
+        </div>
+
+      </div>
+
+      <!-- Resume card -->
+      <div id="resume-wrapper">
+        <div id="resume-output" class="tpl-modern">
+          <!-- Populated by renderResume() — see JavaScript below -->
+          <div class="resume-placeholder">
+            <div class="empty-icon">
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+                <rect x="4" y="2" width="16" height="20" rx="2" stroke="#1a56db" stroke-width="1.6"/>
+                <line x1="7" y1="8" x2="16" y2="8" stroke="#1a56db" stroke-width="1.4"/>
+                <line x1="7" y1="12" x2="16" y2="12" stroke="#1a56db" stroke-width="1.4"/>
+                <line x1="7" y1="16" x2="12" y2="16" stroke="#1a56db" stroke-width="1.4"/>
+                <circle cx="22" cy="21" r="6" fill="#eef2fd" stroke="#1a56db" stroke-width="1.4"/>
+                <path d="M20 21l1.4 1.4L24.5 19" stroke="#1a56db" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3>Your resume preview</h3>
+            <p>Start filling the form — your resume appears here in real time.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download button lives right below the resume — natural next action -->
+      <button class="btn-below-pdf" onclick="downloadPDF()">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 1v9M4.5 7l3 3 3-3" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1.5 11.5C1.5 12.6 2.4 13.5 3.5 13.5h8c1.1 0 2-.9 2-2" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        Download Resume as PDF
+      </button>
+
+    </div><!-- #preview-panel -->
+  </div><!-- #app -->
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<footer id="site-footer">
+  <div class="footer-logo">HireReady</div>
+  <div>Built to help job seekers land interviews — free, fast, and private.</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">About</a>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+     ─────────────────────────────────────────────────────────
+     Sections:
+       1. State & constants
+       2. Template switching
+       3. Project blocks (add / remove)
+       4. LocalStorage — save & restore
+       5. Resume renderer (builds HTML from form data)
+       6. Live update (debounced)
+       7. PDF download
+       8. Helpers
+       9. Init
+═══════════════════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────
+   1. STATE & CONSTANTS
+───────────────────────────────────────────── */
+let currentTemplate = 'modern';  // active template name
+let projectCount    = 0;          // tracks IDs for project blocks
+let liveTimer       = null;       // debounce timer for live preview
+
+// All form field IDs — used for save/restore
+const FIELD_IDS = ['f-name','f-email','f-phone','f-linkedin','f-portfolio','f-summary','f-skills','f-education','f-experience','f-certs'];
+const STORAGE_KEY = 'hireready_v3';
+
+/* ─────────────────────────────────────────────
+   2. TEMPLATE SWITCHING
+   Sets the CSS class on #resume-output and updates
+   the active button in the picker.
+───────────────────────────────────────────── */
+function setTemplate(name) {
+  currentTemplate = name;
+
+  // Update button states
+  document.querySelectorAll('.tpl-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.template === name);
+  });
+
+  // Swap CSS class on the resume element
+  const output = document.getElementById('resume-output');
+  output.className = `tpl-${name}`;
+
+  // Re-render with the new template styles
+  renderResume();
+
+  // Persist template choice
+  saveToStorage();
+}
+
+/* ─────────────────────────────────────────────
+   3. PROJECT BLOCKS — add & remove dynamically
+───────────────────────────────────────────── */
+function addProject(data = {}) {
+  projectCount++;
+  const id = projectCount;
+  const container = document.getElementById('projects-container');
+
+  const div = document.createElement('div');
+  div.className = 'project-block';
+  div.id = `proj-${id}`;
+  div.innerHTML = `
+    <div class="proj-block-header">
+      <span class="proj-block-label">Project #${id}</span>
+      <button class="remove-btn" onclick="removeProject(${id})">✕ Remove</button>
+    </div>
+    <label>Title</label>
+    <input type="text" class="proj-title" placeholder="Portfolio Website" value="${esc(data.title||'')}" oninput="liveUpdate()">
+    <label>Description</label>
+    <textarea class="proj-desc" rows="2" placeholder="What you built and its impact..." oninput="liveUpdate()">${esc(data.desc||'')}</textarea>
+    <label>Tech Stack</label>
+    <input type="text" class="proj-stack" placeholder="React, Node.js, MongoDB" value="${esc(data.stack||'')}" oninput="liveUpdate()">
+    <label>Link <small style="font-weight:400;color:var(--ink-3)">(optional)</small></label>
+    <input type="url" class="proj-link" placeholder="https://github.com/..." value="${esc(data.link||'')}" oninput="liveUpdate()">
+  `;
+  container.appendChild(div);
+}
+
+function removeProject(id) {
+  const el = document.getElementById(`proj-${id}`);
+  if (el) { el.remove(); liveUpdate(); }
+}
+
+/* ─────────────────────────────────────────────
+   4. LOCALSTORAGE — auto-save & restore
+   Saves all field values + project data + template.
+   Restores on page load so no progress is lost.
+───────────────────────────────────────────── */
+function saveToStorage() {
+  const data = { template: currentTemplate, fields: {}, projects: [] };
+
+  // Save simple fields
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data.fields[id] = el.value;
+  });
+
+  // Save project blocks
+  document.querySelectorAll('.project-block').forEach(block => {
+    data.projects.push({
+      title: block.querySelector('.proj-title')?.value  || '',
+      desc:  block.querySelector('.proj-desc')?.value   || '',
+      stack: block.querySelector('.proj-stack')?.value  || '',
+      link:  block.querySelector('.proj-link')?.value   || '',
+    });
+  });
+
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function restoreFromStorage() {
+  let data;
+  try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) {}
+  if (!data) return;
+
+  // Restore simple fields
+  if (data.fields) {
+    FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data.fields[id] !== undefined) el.value = data.fields[id];
+    });
+  }
+
+  // Restore projects
+  if (data.projects && data.projects.length) {
+    data.projects.forEach(p => addProject(p));
+  } else {
+    addProject(); // always have at least one empty block
+  }
+
+  // Restore template
+  if (data.template) setTemplate(data.template);
+}
+
+/* ─────────────────────────────────────────────
+   5. RESUME RENDERER
+   Builds the full resume HTML from form values
+   and injects it into #resume-output.
+   Called on every keystroke (debounced) and on
+   template change.
+───────────────────────────────────────────── */
+function renderResume() {
+  const name      = val('f-name');
+  const email     = val('f-email');
+  const phone     = val('f-phone');
+  const linkedin  = val('f-linkedin');
+  const portfolio = val('f-portfolio');
+  const summary   = val('f-summary');
+  const skills    = val('f-skills').split('\n').map(s => s.trim()).filter(Boolean);
+  const education = val('f-education');
+  const experience= val('f-experience');
+  const certs     = val('f-certs');
+
+  // If the form is empty, show placeholder
+  if (!name && !email && !phone) {
+    document.getElementById('resume-output').innerHTML = `
+      <div class="resume-placeholder">
+        <div class="empty-icon">
+          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+            <rect x="4" y="2" width="16" height="20" rx="2" stroke="#1a56db" stroke-width="1.6"/>
+            <line x1="7" y1="8" x2="16" y2="8" stroke="#1a56db" stroke-width="1.4"/>
+            <line x1="7" y1="12" x2="16" y2="12" stroke="#1a56db" stroke-width="1.4"/>
+            <line x1="7" y1="16" x2="12" y2="16" stroke="#1a56db" stroke-width="1.4"/>
+          </svg>
+        </div>
+        <h3>Your resume preview</h3>
+        <p>Start filling the form — your resume appears here in real time.</p>
+      </div>`;
+    return;
+  }
+
+  // Build contact line
+  let contactParts = [email, phone].filter(Boolean).map(p => esc(p));
+  if (linkedin)  contactParts.push(`<a href="${esc(normalizeURL(linkedin))}" target="_blank">${esc(stripProtocol(linkedin))}</a>`);
+  if (portfolio) contactParts.push(`<a href="${esc(normalizeURL(portfolio))}" target="_blank">${esc(stripProtocol(portfolio))}</a>`);
+
+  // Build projects
+  const projBlocks = document.querySelectorAll('.project-block');
+  const projects = [];
+  projBlocks.forEach(block => {
+    const t = block.querySelector('.proj-title')?.value.trim();
+    const d = block.querySelector('.proj-desc')?.value.trim();
+    const s = block.querySelector('.proj-stack')?.value.trim();
+    const l = block.querySelector('.proj-link')?.value.trim();
+    if (t || d) projects.push({ title:t, desc:d, stack:s, link:l });
+  });
+
+  // Compose HTML — uses CSS classes so template styles apply automatically
+  let html = '';
+
+  // Header
+  html += `<div class="r-name">${esc(name.toUpperCase())}</div>`;
+  html += `<div class="r-contact">${contactParts.join(' &nbsp;|&nbsp; ')}</div>`;
+
+  // Summary
+  if (summary) html += section('Professional Summary', `<p>${esc(summary)}</p>`);
+
+  // Skills
+  if (skills.length) {
+    html += section('Skills',
+      `<ul class="r-skills-list">${skills.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`);
+  }
+
+  // Education
+  if (education) html += section('Education', `<div class="whitespace-pre">${esc(education)}</div>`);
+
+  // Experience
+  if (experience) html += section('Experience', `<div class="whitespace-pre">${esc(experience)}</div>`);
+
+  // Projects
+  if (projects.length) {
+    const projHTML = projects.map(p => `
+      <div class="r-proj">
+        <div class="r-proj-title">${esc(p.title||'Untitled')}${p.stack ? ` <span style="font-weight:400;font-size:9pt;"> — ${esc(p.stack)}</span>` : ''}</div>
+        ${p.link ? `<div class="r-proj-meta"><a href="${esc(normalizeURL(p.link))}" target="_blank">${esc(stripProtocol(p.link))}</a></div>` : ''}
+        ${p.desc ? `<div style="font-size:10pt;">${esc(p.desc)}</div>` : ''}
+      </div>`).join('');
+    html += section('Projects', projHTML);
+  }
+
+  // Certifications
+  if (certs) html += section('Certifications', `<div class="whitespace-pre">${esc(certs)}</div>`);
+
+  document.getElementById('resume-output').innerHTML = html;
+}
+
+// Helper — wraps content in a labelled resume section
+function section(title, innerHTML) {
+  return `
+    <div class="r-section">
+      <div class="r-section-title">${title}</div>
+      ${innerHTML}
+    </div>`;
+}
+
+/* ─────────────────────────────────────────────
+   6. LIVE UPDATE (debounced)
+   Triggered by oninput on every field.
+   Waits 150ms after the last keystroke before
+   re-rendering, to avoid thrashing on fast typing.
+───────────────────────────────────────────── */
+function liveUpdate() {
+  clearTimeout(liveTimer);
+  liveTimer = setTimeout(() => {
+    renderResume();
+    saveToStorage();
+  }, 150);
+}
+
+/* ─────────────────────────────────────────────
+   7. PDF DOWNLOAD
+   Uses html2pdf.js to capture #resume-output
+   exactly as it looks, including template styles.
+───────────────────────────────────────────── */
+function downloadPDF() {
+  const name    = val('f-name') || 'resume';
+  const element = document.getElementById('resume-output');
+
+  // Check there's something to export
+  if (!val('f-name') && !val('f-email')) {
+    alert('Please fill in at least your name and email before downloading.');
+    return;
+  }
+
+  // html2pdf options — A4, 96 dpi, margins match our padding
+  const opt = {
+    margin:      [12, 16, 12, 16],  // top, right, bottom, left (mm)
+    filename:    `${name.replace(/\s+/g,'-').toLowerCase()}-resume.pdf`,
+    image:       { type: 'jpeg', quality: 0.97 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  // Temporarily remove placeholder min-height so PDF isn't padded
+  element.style.minHeight = '0';
+  html2pdf().set(opt).from(element).save().then(() => {
+    element.style.minHeight = '';
+  });
+}
+
+/* ─────────────────────────────────────────────
+   8. HELPERS
+───────────────────────────────────────────── */
+// Get trimmed value of a form field
+function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+// Escape HTML entities to prevent XSS
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Ensure URL has a protocol prefix
+function normalizeURL(url) {
+  return url.startsWith('http') ? url : 'https://' + url;
+}
+
+// Remove https?:// for display
+function stripProtocol(url) {
+  return url.replace(/^https?:\/\//,'');
+}
+
+/* ─────────────────────────────────────────────
+   9. INIT — runs on page load
+   Restores saved data, or seeds an empty project.
+   Then renders the live preview.
+───────────────────────────────────────────── */
+(function init() {
+  restoreFromStorage();
+  renderResume();
+})();
+</script>
+</body>
+</html>
