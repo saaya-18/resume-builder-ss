@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Smart To-Do App</title>
+<style>
+body {
+  font-family: 'Segoe UI';
+  background: linear-gradient(135deg, #141e30, #243b55);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: rgba(255,255,255,0.08);
+  padding: 40px;
+  border-radius: 20px;
+  width: 350px;
+  text-align: center;
+}
+
+input {
+  width: 70%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+li {
+  background: rgba(255,255,255,0.1);
+  margin: 8px 0;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Smart To-Do</h2>
+  <input type="text" id="taskInput" placeholder="Enter task">
+  <button onclick="addTask()">Add</button>
+  <ul id="taskList"></ul>
+  <br>
+  <a href="index.html" style="color:#00f2fe;">← Back</a>
+</div>
+
+<script>
+function addTask() {
+  let input = document.getElementById("taskInput");
+  let task = input.value;
+
+  if(task === "") return;
+
+  let li = document.createElement("li");
+  li.textContent = task;
+
+  li.onclick = function() {
+    li.style.textDecoration = "line-through";
+  };
+
+  document.getElementById("taskList").appendChild(li);
+  input.value = "";
+}
+</script>
+
+</body>
+</html>
